@@ -7,7 +7,7 @@ export default function VocabularyCloud({ cloud }) {
     <section className="cloud-panel">
       <div>
         <Cloud size={19} />
-        <strong>Мой словарь на всех устройствах</strong>
+        <strong>Синхронизация между устройствами</strong>
       </div>
       <p role="status">{cloud.status}</p>
       {cloud.connected ? (
@@ -24,7 +24,7 @@ export default function VocabularyCloud({ cloud }) {
         <>
           <button className="secondary" onClick={() => setOpen(!open)}>
             <KeyRound size={15} />
-            Подключить личный словарь
+            Включить синхронизацию
           </button>
           {open && (
             <form
@@ -34,14 +34,15 @@ export default function VocabularyCloud({ cloud }) {
                 setKey("");
               }}
             >
-              <label htmlFor="cloud-key">Личный ключ доступа</label>
+              <label htmlFor="cloud-key">Пароль</label>
               <input
                 id="cloud-key"
                 type="password"
                 autoComplete="off"
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder="Введи ключ из личного файла"
+                inputMode="numeric"
+                placeholder="Пароль"
                 required
               />
               <button className="primary" type="submit">
@@ -52,10 +53,9 @@ export default function VocabularyCloud({ cloud }) {
         </>
       )}
       <small>
-        Приватное хранилище одного пользователя. Синхронизируются слова,
-        контекст, перевод и расписание повторения. Ключ действует в этой
-        вкладке; на другом устройстве введи его снова. Без сети словарь
-        сохраняется локально.
+        Синхронизируются словарь, история попыток, выделения, свои тексты и
+        черновики Writing. Пароль вводится один раз на устройстве. Без сети всё
+        сохраняется локально и догружается потом.
       </small>
     </section>
   );

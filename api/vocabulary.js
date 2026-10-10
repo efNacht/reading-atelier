@@ -1,26 +1,12 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { get, put } from "@vercel/blob";
+import { authorize } from "./_auth.js";
 import { validateVocabulary } from "../src/vocab-sync-logic.js";
 const pathname = "single-user/vocabulary.json";
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   if (!["GET", "PUT"].includes(req.method))
     return res.status(405).json({ error: "Method not allowed" });
-  const secret = process.env.IELTS_SYNC_KEY_HASH;
-  const key = (req.headers.authorization || "").replace(/^Bearer /, "");
-  if (!secret) return res.status(503).json({ error: "Sync is not configured" });
-  const actual = createHash("sha256").update(key).digest();
-  const expected = Buffer.from(secret, "hex");
-  if (expected.length !== actual.length || !timingSafeEqual(actual, expected))
-    return res.status(401).json({ error: "Unauthorized" });
-  if (req.headers.origin) {
-    try {
-      if (new URL(req.headers.origin).host !== req.headers.host)
-        return res.status(403).json({ error: "Origin mismatch" });
-    } catch {
-      return res.status(403).json({ error: "Invalid origin" });
-    }
-  }
+  if (!authorize(req, res)) return;
   try {
     const remote = await get(pathname, { access: "private", useCache: false });
     const etag = remote?.blob.etag || null;

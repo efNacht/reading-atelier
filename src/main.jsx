@@ -44,6 +44,7 @@ import "./style.css";
 import LessonChallenge from "./LessonChallenge";
 import ReadingCoach, { HomeReadingDemo } from "./ReadingCoach";
 import useVocabulary from "./useVocabulary";
+import { installStateSync, pullAndPush } from "./state-sync";
 import VocabularyCloud from "./VocabularyCloud";
 import StudyTimer from "./StudyTimer";
 const WritingStudio = React.lazy(() => import("./WritingStudio"));
@@ -2093,7 +2094,11 @@ function App() {
     </>
   );
 }
-createRoot(document.getElementById("root")).render(<App />);
+installStateSync();
+// Pull newer progress from other devices before first render (max ~2.5s, offline-safe).
+Promise.race([pullAndPush().catch(() => {}), new Promise((r) => setTimeout(r, 2500))]).finally(() =>
+  createRoot(document.getElementById("root")).render(<App />),
+);
 
 if ("serviceWorker" in navigator && import.meta.env.PROD)
   navigator.serviceWorker.register("/sw.js").catch(() => {});

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { mergeVocabulary } from "./vocab-sync-logic";
+import { KEY_STORAGE, connectStateSync, disconnectStateSync } from "./state-sync";
 const read = (key, fallback) => {
   try {
     return JSON.parse(localStorage.getItem(key)) || fallback;
@@ -13,7 +14,13 @@ export default function useVocabulary() {
     deleted: read("ra-vocab-deleted", {}),
   }));
   const [key, setKey] = useState(
-    () => sessionStorage.getItem("ielts-sync-key") || "",
+    () => {
+      try {
+        return localStorage.getItem(KEY_STORAGE) || "";
+      } catch {
+        return "";
+      }
+    },
   );
   const [status, setStatus] = useState(
     key ? "Подключаем словарь…" : "Словарь сохранён на этом устройстве",
@@ -65,7 +72,10 @@ export default function useVocabulary() {
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     if (response.status === 401)
-      throw new Error("Ключ не подходит. Введи личный ключ доступа.");
+      {
+      disconnectStateSync();
+      throw new Error("Пароль не подходит.");
+    }
     if (response.status === 409) return null;
     if (!response.ok)
       throw new Error(
@@ -116,7 +126,6 @@ export default function useVocabulary() {
   }
   useEffect(() => {
     if (!key) return;
-    sessionStorage.setItem("ielts-sync-key", key);
     sync();
   }, [key]);
   useEffect(() => {
@@ -143,11 +152,12 @@ export default function useVocabulary() {
     connected,
     connect: (value) => {
       etag.current = null;
+      connectStateSync(value.trim());
       setKey(value.trim());
     },
     sync,
     disconnect: () => {
-      sessionStorage.removeItem("ielts-sync-key");
+      disconnectStateSync();
       credential.current = "";
       setKey("");
       setConnected(false);
