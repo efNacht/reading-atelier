@@ -1,4 +1,4 @@
-const CACHE = "ielts-preparation-v3";
+const CACHE = "ielts-preparation-v4";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then(async (cache) => {

@@ -2094,10 +2094,30 @@ function App() {
     </>
   );
 }
+class Crash extends React.Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div style={{ padding: 32, maxWidth: 520, margin: "10vh auto", fontFamily: "system-ui" }}>
+        <h2>Что-то сломалось в этом разделе</h2>
+        <p>Прогресс сохранён. Перезагрузи страницу.</p>
+        <button className="primary" onClick={() => location.reload()}>Перезагрузить</button>
+      </div>
+    );
+  }
+}
 installStateSync();
 // Pull newer progress from other devices before first render (max ~2.5s, offline-safe).
 Promise.race([pullAndPush().catch(() => {}), new Promise((r) => setTimeout(r, 2500))]).finally(() =>
-  createRoot(document.getElementById("root")).render(<App />),
+  createRoot(document.getElementById("root")).render(
+    <Crash>
+      <App />
+    </Crash>,
+  ),
 );
 
 if ("serviceWorker" in navigator && import.meta.env.PROD)
