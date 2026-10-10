@@ -22,7 +22,9 @@ const q = (
   options,
   alternatives,
 });
-export const passages = [
+import { extraPassages } from "./extra-reading.js";
+
+const basePassages = [
   {
     id: "gardens",
     title: "A quieter kind of city",
@@ -1036,3 +1038,96 @@ export const glossary = {
   recruitment: "набор сотрудников",
   mains: "центральная сеть",
 };
+
+// Authored teaching maps: phrase pairs can be equivalent, contrasting, or incomplete.
+// The text side is always quoted verbatim; explanations establish the relationship.
+const readingTeaching = {
+  gardens: [
+    ["Ищи условия вступления: стоимость членства, не стоимость семян.", "pay to join", "without paying a membership fee", "had to", "Обязанность платить противоречит бесплатному вступлению."],
+    ["Ищи именно расходы домохозяйства на еду.", "household food spending", "household spending", "reduced", "Вопрос утверждает снижение; текст сообщает только, что расходы не измеряли.", "Нет результата измерения расходов: нельзя установить ни снижение, ни его отсутствие."],
+    ["People interviewed можно найти через respondents.", "Most people interviewed", "Most respondents", "Most", "Сохрани ту же группу: большинство опрошенных, не весь город."],
+    ["Ищи, что участники должны были приносить сами.", "supply their own", "bring their own seeds", "own", "Речь о личных семенах участников, не об общем инвентаре."],
+    ["Ищи планы и будущие изменения, а не историю открытия.", "future changes", "plans to open two additional gardens", "future", "Plans и next spring обозначают ещё не реализованное изменение."],
+    ["Имя Morris ведёт к её сравнению доступа и площади.", "particularly important", "more valuable than extra space", "particularly", "Вопрос просит приоритет, а не любой упомянутый фактор."],
+    ["Ищи решение о выдаче инструментов и проверь время.", "already provide tools", "has not decided whether tools will be available to borrow", "already", "Утверждение о действующей услуге нельзя подменять планом или нерешённым вопросом."],
+    ["Читай весь абзац B: результаты и ограничения выборки.", "paragraph B", "rather than the opinions of the whole town", "best heading", "Заголовок должен охватить абзац целиком, не только знакомство соседей."],
+  ],
+  sleep: [
+    ["Найди общее число участников и число носивших мониторы.", "Every participant", "48 also wore wrist monitors", "Every", "В исследовании 72 участника, а мониторы были у 48: есть прямое исключение."],
+    ["Найди, фиксировались ли examination results.", "examination results", "did not record examination results", "better", "Улучшение скорости засыпания не означает улучшение результатов экзаменов.", "Не указаны результаты экзаменов до и после исследования."],
+    ["Ищи инструмент записи привычек, не измерения движения.", "recorded their routines", "kept a diary", "a", "Артикль a уже стоит в вопросе: добавляется существительное diary."],
+    ["Найди инструкцию о времени сна, а не о телефонах.", "go to bed earlier", "not asked to change the time they went to sleep", "earlier", "Инструкция убрать телефон не является инструкцией лечь раньше."],
+    ["Ищи имя рядом с alternative explanation и keeping a diary.", "diary keeping", "keeping a diary", "Who", "Сопоставь мнение с автором, а не со всеми исследователями абзаца."],
+    ["Абзац C описывает два объяснения и то, с чем согласны оба.", "paragraph C", "Both agreed that a two-week study was too short", "heading", "Общее ограничение дополняет конкурирующие объяснения; одного имени недостаточно."],
+    ["Compulsory перефразируется как required to attend.", "compulsory", "not be required to attend", "will be", "Проверь отрицание в инструкции об обязательности будущего посещения."],
+    ["Ищи объявленную дату workshop.", "on a Saturday", "have not announced a date", "Saturday", "Нельзя придумать день недели по удобству студентов.", "Дата и день недели не объявлены."],
+  ],
+  museum: [
+    ["Найди, предоставляла ли выставка услугу ремонта.", "repaired at the exhibition", "did not offer a repair service", "could", "Возможность ремонта не следует из темы выставки или просьб посетителей."],
+    ["Ищи историю конкретной куртки и число владельцев поколений.", "had been owned", "had belonged to three generations", "three", "Three уже дано; в пропуске нужно generations, не повторение числа."],
+    ["Найди, зачем сопровождать вещи историями владельцев.", "paragraph B", "why someone had chosen to keep it", "best heading", "Деньги и воспоминания — примеры общей темы причин сохранения вещи."],
+    ["Сопоставь younger visitors и older visitors.", "All age groups", "older visitors showed no clear preference", "All", "Отсутствие предпочтения у старших опровергает утверждение о предпочтении всех групп."],
+    ["Ищи сравнение полов, а не возраста или длительности посещения.", "More women than men", "younger visitors spent longer", "More", "Время у аудиоэкспонатов не сообщает количество женщин и мужчин.", "Числа посетителей по полу и их соотношение не даны."],
+    ["Найди альтернативный фактор у researcher Tom Reed.", "treated carefully", "might have influenced the results", "may", "Положение стендов — возможный фактор; текст не утверждает доказанную причинность."],
+    ["Найди, за что музей будет взимать плату.", "pay for", "charge for materials", "but not", "Контраст разделяет платные материалы и бесплатное обучение."],
+    ["Ищи статус соглашения именно с clothing company.", "already agreed", "has not yet been agreed", "already", "Полученная поддержка благотворительной организации не равна соглашению с компанией."],
+  ],
+  transport: [
+    ["Ищи отдельно утреннее и вечернее расписание.", "changed the morning timetable", "Morning services were unchanged", "morning", "Изменения вечерних рейсов не относятся к утренним."],
+    ["Ищи новый интервал, а не прежние forty minutes.", "gap between evening buses", "interval to twenty minutes", "reduced to", "To спрашивает конечное значение, не величину сокращения."],
+    ["Найди, что считали: билеты или уникальных пассажиров.", "individual passengers", "tickets, not individual passengers", "eighteen per cent", "Этот процент относится к билетам; один человек мог купить несколько.", "Динамика числа уникальных пассажиров не измерена."],
+    ["Ищи сведения о транспорте до появления нового расписания.", "car journeys", "whether customers had previously driven", "reduced", "Рост билетов сам по себе не доказывает отказ от автомобильных поездок.", "Нет данных о прежнем способе передвижения покупателей билетов."],
+    ["Имя Ellis ведёт к различию между частотой и часами работы.", "distinction", "frequency and operating hours should be assessed separately", "distinction", "Нужна пара разных параметров, а не только короткое ожидание."],
+    ["Ищи, принято ли решение о продолжении в абзаце D.", "paragraph D", "will decide next month whether to continue", "heading", "Отчёт и расходы служат будущему решению, ещё не принятому."],
+    ["Ищи обе стороны финансирования пробного расписания.", "both funded", "funded jointly by the operator and the regional council", "both", "Jointly подтверждает участие обеих названных сторон."],
+    ["Найди статус бюджета для рейсов после полуночи.", "has been confirmed", "no funding has been allocated", "confirmed", "Suggested означает предложено; allocated означает выделено финансирование."],
+  ],
+  language: [
+    ["Сравни суммарное время, а не количество учебных сессий.", "more time studying overall", "Both groups spent thirty minutes in total", "overall", "Total время одинаково, хотя сессии распределены по-разному."],
+    ["Ищи immediate test, не тест через месяц.", "immediate test", "immediately after the final review", "similar", "Похожий немедленный результат и различный отсроченный результат не противоречат друг другу."],
+    ["Найди, проверяли ли pronunciation.", "pronunciation", "Neither group was tested on conversation or pronunciation", "improved", "Результат памяти на слова нельзя переносить на произношение.", "Произношение не тестировали: улучшение или отсутствие улучшения неизвестно."],
+    ["Ищи язык, который изучали обе группы.", "learning", "learning Spanish as beginners", "both groups", "Both обозначает обе группы; нужен язык из текста."],
+    ["Имя Webb находится рядом с предупреждением о равном времени.", "study time must remain equal", "keep the total review time equal", "Who", "Автор идеи примеров и автор предупреждения о времени — разные люди."],
+    ["Найди позицию автора о повторении и использовании языка.", "replace", "not a substitute for using a language", "replace", "Substitute означает замену. Отрицание исключает такую замену."],
+    ["Ищи, принимает ли автор универсальный график для всех.", "every learner", "one schedule will suit everyone", "same", "Автор rejects эту идею; совпадение самой фразы не означает согласие автора."],
+    ["Ищи сравнение устойчивой маленькой привычки и заброшенного плана.", "sustainable small routine", "Small routines that people can maintain", "may", "May сохраняет осторожность: возможно лучше, а не обязательно лучше всегда."],
+  ],
+  water: [
+    ["Ищи назначение собранной воды.", "drinking water", "not supplied for drinking", "drinking", "Туалеты и полив отличаются от питьевого использования; отрицание явное."],
+    ["Найди, можно ли приписать всё снижение одному баку.", "alone caused the whole reduction", "could not be attributed entirely to the tank", "alone", "Entirely и whole задают полный эффект. Другие факторы также описаны."],
+    ["Сравни покупку mains water с предыдущим годом.", "less mains water", "thirty per cent less mains water", "previous year", "Период сравнения совпадает; вопрос не приписывает снижение одной причине."],
+    ["Ищи, какую статью затрат покрывал grant.", "paid for half", "covering half the construction cost", "half", "Грант покрывал половину строительных затрат, не все будущие расходы."],
+    ["Ищи статус девятилетнего периода: прогноз или уже измеренный результат.", "already paid for itself", "a projection, not a measured payback period", "already", "Might cover — условная будущая окупаемость; это не достигнутый результат."],
+    ["Ищи изготовителя насосов, а не цену их обслуживания.", "pumps made by the same company", "cost of servicing the pumps", "same company", "Обслуживание и производитель — разные факты.", "Производитель насосов библиотечной и школьной систем не назван."],
+    ["Найди рекомендацию Nair перед расширением.", "before expanding", "Before making a decision", "recommend", "Рекомендация — наблюдать дольше, а не гарантировать полную замену водопровода."],
+    ["Читай вместе затраты и условия прогноза абзаца C.", "paragraph C", "assuming that maintenance expenses and water prices did not change", "heading", "Условный прогноз нельзя назвать уже доказанной окупаемостью."],
+  ],
+  library: [
+    ["Найди, нужна ли новая карточка или подходит имеющаяся.", "new library card", "existing library cards", "new", "Existing противопоставлено new: действующая карточка подходит."],
+    ["Ищи охват электронного каталога.", "All printed titles", "Not every printed book", "All", "Not every прямо означает наличие исключений."],
+    ["Ищи техническое условие доступа к электронной выдаче.", "internet", "internet connection", "an", "Internet уже стоит перед пропуском; нужен только connection."],
+    ["Найди данные о возрасте посетителей мастерской.", "elderly", "did not record the ages of attendees", "Most", "Новичок в технологии не обязательно пожилой человек.", "Возраст посетителей не записывали; доля пожилых неизвестна."],
+    ["Ищи ограничение одновременной выдачи цифровой копии.", "have to wait", "only one member at a time", "why", "Объяснение связано с лицензией, а не с физическим наличием книги."],
+    ["Найди долю электронных выдач к June.", "What share", "a quarter of all loans", "share", "Доля — quarter, а не изменение общего количества."],
+    ["Найди изменение всех выдач с January, не долю электронных.", "total number of loans increased", "whether total borrowing had increased since January", "total", "Рост доли цифровых книг не позволяет вычислить рост всех выдач.", "Общее изменение количества выдач не сообщено."],
+    ["Ищи итог рассмотрения платы за электронную выдачу.", "decided to charge", "proposal to charge for electronic loans was rejected", "decided", "Отклонённое предложение не является принятым решением."],
+  ],
+  work: [
+    ["Найди, изменились ли salaries.", "lower salaries", "kept their previous salaries", "lower", "Сохранённая зарплата не означает сниженную, даже если рабочих дней меньше."],
+    ["Сопоставь результаты всех трёх компаний.", "Every company", "the third saw a small decline", "Every", "Достаточно одной компании с падением, чтобы опровергнуть every."],
+    ["Найди, опрашивали ли ушедших работников.", "Employees who left", "did not include workers who had left", "more stressed", "Причину ухода и уровень стресса нельзя вывести из самого факта ухода.", "Нет результатов опроса ушедших и сравнения их стресса с оставшимися."],
+    ["Ищи конкретный способ сокращения длительности работы.", "reduced the length", "shortened meetings", "One company", "Это одна из трёх компаний; не переносим способ организации на все."],
+    ["Имя Marsh ведёт к замечанию о выпавших недовольных работниках.", "dissatisfied employees", "overlook some dissatisfied employees", "Who", "Marsh говорит о выборке; Khan — о доступности услуги для клиентов."],
+    ["Ищи итоговую рекомендацию автора и ограничения.", "every workplace now", "cannot yet be recommended for every workplace", "now", "Yet ограничивает нынешнюю рекомендацию, а не запрещает идею навсегда."],
+    ["Найди позицию автора о следующих экспериментах.", "different industries", "different sectors", "Further trials", "Favours означает поддержку дальнейших экспериментов в разных отраслях."],
+    ["Ищи, что важнее клиентам: покрытие часов или дни отдельного работника.", "paragraph C", "coverage mattered more to clients", "heading", "Главная тема объединяет жалобы на закрытый офис и отсутствие изменений при сменном графике."],
+  ],
+};
+for (const passage of basePassages) {
+  passage.questions.forEach((question, index) => {
+    const [anchor, questionPhrase, textPhrase, word, note, missing] = readingTeaching[passage.id][index];
+    question.teaching = { anchor, paraphrases: [{ question: questionPhrase, text: textPhrase }], scope: [{ word, note }], ...(missing ? { missing } : {}) };
+  });
+}
+
+export const passages = [...basePassages, ...extraPassages];

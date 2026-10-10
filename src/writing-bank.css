@@ -1,0 +1,392 @@
+.writing-bank {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 0 40px;
+  color: #30272f;
+}
+.wb-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.wb-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #8d3157;
+}
+.wb-header h2 {
+  font-size: clamp(26px, 4vw, 38px);
+  margin: 10px 0;
+}
+.wb-header p {
+  max-width: 680px;
+  line-height: 1.6;
+  color: #82727d;
+}
+.wb-count {
+  min-width: 100px;
+  background: #f8e8ef;
+  padding: 16px;
+  border-radius: 18px;
+  align-self: flex-start;
+  display: grid;
+  gap: 2px;
+}
+.wb-count strong {
+  font-size: 38px;
+}
+.wb-count span {
+  font-size: 12px;
+}
+.wb-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.wb-tabs button,
+.wb-filters button,
+.wb-quiz-options button {
+  border: 1px solid #ecdbe3;
+  background: #fffcfd;
+  color: #826778;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.wb-tabs .active,
+.wb-filters .active,
+.wb-quiz-options .selected {
+  background: #8d3157;
+  color: white;
+  border-color: #8d3157;
+}
+.wb-tools {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.wb-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wb-tools input {
+  border: 1px solid #ecdbe3;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fffcfd;
+  font: inherit;
+  min-width: 260px;
+}
+.wb-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #82727d;
+  max-width: 850px;
+  margin: 18px 0;
+}
+.wb-schemes {
+  display: grid;
+  gap: 12px;
+}
+.wb-card {
+  border: 1px solid #ecdbe3;
+  background: #fffcfd;
+  border-radius: 17px;
+  overflow: hidden;
+}
+.wb-card-head {
+  padding: 20px;
+  display: flex;
+  width: 100%;
+  text-align: left;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.wb-card-head span {
+  display: grid;
+  gap: 7px;
+}
+.wb-card-head small,
+.wb-topic > small,
+.wb-quiz > small {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #9b7962;
+  font-weight: 700;
+}
+.wb-card-head strong {
+  font-size: 18px;
+}
+.wb-card-head em {
+  font-style: normal;
+  color: #83776c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wb-card.expanded .wb-card-head > svg {
+  transform: rotate(180deg);
+}
+.wb-card-body {
+  padding: 0 20px 22px;
+}
+.wb-flow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 4px 0 24px;
+}
+.wb-flow div {
+  padding: 13px;
+  background: #f2ede5;
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wb-flow b {
+  color: #a77d62;
+  font-size: 11px;
+}
+.wb-detail-grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 24px;
+}
+.wb-detail-grid h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.wb-template-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.wb-template-head h3 {
+  margin: 0;
+}
+.wb-template-head button {
+  background: none;
+  border: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #9a674c;
+  cursor: pointer;
+  font-size: 12px;
+}
+.wb-detail-grid pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0 0 10px;
+  background: #f6f3ee;
+  border: 1px solid #e8dfd3;
+  border-radius: 12px;
+  padding: 17px;
+  font:
+    13px/1.85 ui-monospace,
+    SFMono-Regular,
+    monospace;
+}
+.wb-muted {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8b8075;
+  display: block;
+}
+.wb-detail-grid aside p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #6d6358;
+  margin: 0 0 20px;
+}
+.wb-practice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #edddd0;
+  color: #6e4a33;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.wb-topics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.wb-topic {
+  background: #fffcfd;
+  border: 1px solid #ecdbe3;
+  padding: 22px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.wb-topic h3 {
+  font-size: 20px;
+  margin: 10px 0 20px;
+}
+.wb-topic div > b {
+  font-size: 11px;
+  color: #847160;
+}
+.wb-topic div > p {
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 7px 0 15px;
+}
+.wb-nuance {
+  border-top: 1px solid #e8dfd3;
+  padding-top: 13px;
+}
+.wb-lexicon {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #9a7961;
+  margin-top: auto;
+}
+.wb-topic .wb-practice {
+  margin-top: 8px;
+}
+.wb-quiz {
+  max-width: 800px;
+  background: #fffcfd;
+  border: 1px solid #ecdbe3;
+  border-radius: 20px;
+  padding: 28px;
+}
+.wb-quiz h3 {
+  font-size: 23px;
+  margin: 14px 0;
+}
+.wb-quiz blockquote {
+  margin: 20px 0;
+  padding: 20px;
+  border-left: 3px solid #b08e75;
+  background: #f4efe7;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.wb-quiz-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wb-feedback {
+  padding: 18px;
+  background: #f8ebe2;
+  border-radius: 12px;
+  margin-top: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.wb-feedback.correct {
+  background: #e8eee2;
+}
+.wb-feedback p {
+  margin: 8px 0;
+}
+.wb-feedback button {
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 600;
+}
+.writing-bank button:focus-visible,
+.writing-bank input:focus-visible {
+  outline: 3px solid #b78865;
+  outline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .wb-topics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .writing-bank {
+    padding-top: 8px;
+  }
+  .wb-header {
+    gap: 12px;
+  }
+  .wb-count {
+    display: none;
+  }
+  .wb-tabs {
+    gap: 6px;
+  }
+  .wb-tabs button {
+    font-size: 12px;
+    padding: 11px;
+  }
+  .wb-tools input {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+  .wb-filters button {
+    font-size: 12px;
+    padding: 10px;
+  }
+  .wb-flow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .wb-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .wb-topics {
+    grid-template-columns: 1fr;
+  }
+  .wb-card-head,
+  .wb-card-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .wb-quiz {
+    padding: 20px 16px;
+  }
+  .wb-quiz blockquote {
+    font-size: 16px;
+    padding: 15px;
+  }
+  .wb-header p {
+    font-size: 14px;
+  }
+  .wb-template-head {
+    align-items: flex-start;
+  }
+  .wb-template-head button {
+    min-height: 32px;
+  }
+  .wb-quiz-options button {
+    min-height: 44px;
+  }
+}

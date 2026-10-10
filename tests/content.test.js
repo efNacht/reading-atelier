@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { passages } from "../src/content.js";
 import { isCorrect, validateImport } from "../src/logic.js";
-test("All 64 questions have verbatim evidence, usable answers and unique IDs", () => {
+test("All questions have verbatim evidence, usable answers and unique IDs", () => {
   assert.equal(new Set(passages.map((p) => p.id)).size, passages.length);
   assert.equal(
     passages.reduce((a, p) => a + p.questions.length, 0),
-    64,
+    136,
   );
   for (const p of passages) {
     assert.doesNotThrow(() => validateImport(p));

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BookOpen,
+  FileText,
   ArrowUpRight,
   ArrowRight,
   Sparkles,
@@ -41,6 +42,13 @@ import {
 } from "./logic";
 import "./style.css";
 import LessonChallenge from "./LessonChallenge";
+import ReadingCoach, { HomeReadingDemo } from "./ReadingCoach";
+import useVocabulary from "./useVocabulary";
+import VocabularyCloud from "./VocabularyCloud";
+import StudyTimer from "./StudyTimer";
+const WritingStudio = React.lazy(() => import("./WritingStudio"));
+const ResourceLibrary = React.lazy(() => import("./ResourceLibrary"));
+import { annotationRanges, anchorRanges } from "./highlight-logic";
 import { unzipSync, strFromU8 } from "fflate";
 const labels = {
   tfng: "True / False / Not Given",
@@ -73,12 +81,14 @@ function download(name, data, type = "application/json") {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function App() {
+  const [mobileMore, setMobileMore] = useState(false);
   const [page, setPage] = useState("home"),
     [mode, setMode] = useState("coach"),
     [filter, setFilter] = useState("Все"),
     [search, setSearch] = useState("");
-  const [words, setWords, wordFailure] = useSaved("ra-vocab", []),
-    [history, setHistory, historyFailure] = useSaved("ra-history", []),
+  const cloud = useVocabulary();
+  const { words, setWords, failed: wordFailure } = cloud;
+  const [history, setHistory, historyFailure] = useSaved("ra-history", []),
     [custom, setCustom, customFailure] = useSaved("ra-custom", []),
     [sessions, setSessions, sessionFailure] = useSaved("ra-sessions", {});
   const [highlights, setHighlights, highlightFailure] = useSaved(
@@ -105,6 +115,15 @@ function App() {
     [review, setReview] = useState(false),
     [flipped, setFlipped] = useState(false),
     [confirmReset, setConfirmReset] = useState(false);
+  const [selectedEvidence, setSelectedEvidence] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [sentencePicking, setSentencePicking] = useState(false);
+  const suppressWordClick = useRef(false);
+  const readingClock = useRef(0);
+  useEffect(() => {
+    setSelectedEvidence("");
+    setSelectedLocation(null);
+  }, [activeId, idx, page]);
   const paragraphRefs = useRef([]);
   const textPanelRef = useRef(null),
     questionPanelRef = useRef(null);
@@ -138,10 +157,14 @@ function App() {
   }, [page, activeId, answers, checked, hints, idx, remaining, mode, finished]);
   useEffect(() => {
     if (page === "reader" && mode === "exam" && !paused && !finished) {
-      const t = setInterval(
-        () => setRemaining((v) => Math.max(0, v - 1)),
-        1000,
-      );
+      readingClock.current = Date.now();
+      const t = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - readingClock.current) / 1000);
+        if (elapsed > 0) {
+          readingClock.current += elapsed * 1000;
+          setRemaining((v) => Math.max(0, v - elapsed));
+        }
+      }, 500);
       return () => clearInterval(t);
     }
   }, [page, mode, paused, finished]);
@@ -152,6 +175,7 @@ function App() {
   }, [remaining, page, mode]);
   function navigate(p) {
     setPage(p);
+    setMobileMore(false);
     setLesson(null);
     setWord(null);
     setReview(false);
@@ -252,11 +276,40 @@ function App() {
     const selection = window.getSelection();
     const t = selection?.toString().trim();
     if (
-      t &&
-      t.length < 120 &&
-      e.currentTarget.contains(selection.anchorNode) &&
-      e.currentTarget.contains(selection.focusNode)
-    ) {
+      !t ||
+      t.length > 1000 ||
+      !e.currentTarget.contains(selection.anchorNode) ||
+      !e.currentTarget.contains(selection.focusNode)
+    )
+      return;
+    suppressWordClick.current = true;
+    setTimeout(() => {
+      suppressWordClick.current = false;
+    }, 0);
+    if (q && mode !== "exam" && !checked[idx] && !finished) {
+      const paragraph =
+        selection.anchorNode?.parentElement?.closest("p[data-paragraph]");
+      const endParagraph =
+        selection.focusNode?.parentElement?.closest("p[data-paragraph]");
+      if (paragraph !== endParagraph || !paragraph) {
+        notify("Выдели фрагмент внутри одного абзаца");
+        return;
+      }
+      const range = selection.getRangeAt(0),
+        prefix = range.cloneRange();
+      prefix.selectNodeContents(paragraph);
+      prefix.setEnd(range.startContainer, range.startOffset);
+      const raw = range.toString(),
+        start = prefix.toString().length + raw.length - raw.trimStart().length;
+      setSelectedLocation({
+        text: t,
+        paragraph: Number(paragraph.dataset.paragraph),
+        start,
+        end: start + t.length,
+      });
+      setSelectedEvidence(t);
+      selection.removeAllRanges();
+    } else {
       pickWord(
         t,
         selection.anchorNode?.parentElement?.closest("p")?.textContent ||
@@ -266,14 +319,11 @@ function App() {
   }
   function renderParagraph(text, pi) {
     let ranges = [];
-    let personalRanges = [];
-    for (const phrase of highlights[`${activeId}:${mode}`] || []) {
-      let at = text.indexOf(phrase);
-      while (at >= 0) {
-        personalRanges.push([at, at + phrase.length]);
-        at = text.indexOf(phrase, at + phrase.length);
-      }
-    }
+    const personalRanges = annotationRanges(
+      text,
+      pi,
+      highlights[`${activeId}:${mode}`] || [],
+    );
     const show =
       q &&
       (checked[idx] ||
@@ -283,6 +333,10 @@ function App() {
       let start = text.indexOf(q.evidence);
       if (start >= 0) ranges.push([start, start + q.evidence.length]);
     }
+    const chosenAt =
+      selectedEvidence && selectedLocation?.paragraph === pi
+        ? selectedLocation.start
+        : -1;
     let offset = 0;
     return text.split(/(\s+)/).map((token, j) => {
       const start = offset;
@@ -293,12 +347,31 @@ function App() {
       return (
         <span
           key={j}
-          className={`${lit ? "proof " : ""}${personalRanges.some(([a, b]) => start < b && offset > a) ? "manual-mark " : ""}${words.some((w) => w.text.toLowerCase() === cleaned) ? "known-word" : ""}`}
+          className={`${chosenAt >= 0 && start < chosenAt + selectedEvidence.length && offset > chosenAt ? "picked-proof " : ""}${lit ? "proof " : ""}${personalRanges.some(([a, b]) => start < b && offset > a) ? "manual-mark " : ""}${words.some((w) => w.text.toLowerCase() === cleaned) ? "known-word" : ""}`}
           role="button"
-          tabIndex={0}
+          tabIndex={-1}
           aria-label={`Слово ${token}`}
           onClick={() => {
-            if (!window.getSelection()?.toString()) pickWord(token, text);
+            if (
+              !suppressWordClick.current &&
+              !window.getSelection()?.toString()
+            )
+              if (sentencePicking) {
+                let a = start,
+                  b = offset;
+                while (a > 0 && !/[.!?]/.test(text[a - 1])) a--;
+                while (b < text.length && !/[.!?]/.test(text[b - 1])) b++;
+                const raw = text.slice(a, b),
+                  quote = raw.trim();
+                a += raw.length - raw.trimStart().length;
+                setSelectedEvidence(quote);
+                setSelectedLocation({
+                  text: quote,
+                  paragraph: pi,
+                  start: a,
+                  end: a + quote.length,
+                });
+              } else pickWord(token, text);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -436,16 +509,19 @@ function App() {
               <span>✦</span>
             </span>
             <span>
-              Reading <b>Atelier</b>
-              <small>маленькие шаги. ясные ответы.</small>
+              IELTS <b>Preparation</b>
+              <small>Reading & Writing</small>
             </span>
           </button>
           <nav aria-label="Основная навигация">
             {[
-              ["home", "Практика"],
+              ["home", "Reading"],
+              ["writing", "Writing"],
               ["learn", "Техники"],
               ["vocab", "Словарь"],
               ["progress", "Мой путь"],
+              ["timer", "Таймер"],
+              ["resources", "Банк и советы"],
             ].map(([p, name]) => (
               <button
                 className={page === p ? "active" : ""}
@@ -458,7 +534,7 @@ function App() {
             ))}
           </nav>
           <span className="header-note">
-            <span /> IELTS Reading
+            <span /> IELTS Academic
           </span>
         </div>
       </header>
@@ -474,68 +550,32 @@ function App() {
       )}
       {page === "home" && (
         <main>
-          <section className="hero">
-            <div>
-              <div className="eyebrow">
-                <Sparkles size={13} /> ТВОЁ СПОКОЙНОЕ МЕСТО ДЛЯ ПОДГОТОВКИ
+          <section className="study-start">
+            <div className="study-heading">
+              <div>
+                <div className="eyebrow">READING · УЧИМСЯ НА ТЕКСТЕ</div>
+                <h1>Как найти и проверить ответ</h1>
+                <p>
+                  Выдели якорь в вопросе → найди фрагмент → сравни смысл.
+                  Попробуй на примере ниже.
+                </p>
               </div>
-              <h1>
-                Читать внимательнее.
-                <br />
-                <em>Отвечать увереннее.</em>
-              </h1>
-              <p>
-                Не нужно понимать каждое слово. Научись находить нужную мысль,
-                <br className="desktop" /> замечать ловушки и опираться на текст
-                — шаг за шагом.
-              </p>
-              <div className="hero-actions">
+              <div className="button-row">
                 <button
                   className="primary"
                   onClick={() => start(passages[0], "coach")}
                 >
-                  Начать с подсказками <ArrowRight size={16} />
+                  Открыть Reading <ArrowRight size={16} />
                 </button>
                 <button
-                  className="text-button"
-                  onClick={() => navigate("learn")}
+                  className="secondary"
+                  onClick={() => navigate("writing")}
                 >
-                  Как это работает <ArrowUpRight size={15} />
+                  Перейти к Writing <ArrowUpRight size={16} />
                 </button>
               </div>
-              <div className="hero-meta">
-                <span>
-                  <Check size={13} /> Без оценок за скорость
-                </span>
-                <span>
-                  <Check size={13} /> Объяснение каждого ответа
-                </span>
-              </div>
             </div>
-            <div className="hero-art" aria-hidden="true">
-              <div className="art-flower">
-                <Flower2 size={140} strokeWidth={0.75} />
-              </div>
-              <div className="paper-card">
-                <span className="mini-label">THE ART OF NOTICING</span>
-                <div className="paper-line">
-                  The study found that <mark>some</mark>
-                </div>
-                <div className="paper-line">
-                  participants felt more confident.
-                </div>
-                <div className="paper-rule" />
-                <span className="paper-question">
-                  Does this mean <b>everyone</b>?
-                </span>
-                <div className="paper-note">
-                  <Lightbulb size={15} /> Одно слово меняет весь смысл.
-                </div>
-              </div>
-              <div className="floating-pill">
-                <Highlighter size={15} /> Найти. Сравнить. Понять.
-              </div>
-            </div>
+            <HomeReadingDemo />
           </section>
           <section className="modes">
             {[
@@ -572,9 +612,9 @@ function App() {
           <section className="library">
             <div className="section-top">
               <div>
-                <div className="eyebrow">ОДИН ТЕКСТ ЗА РАЗ</div>
+                <div className="eyebrow">БАНК READING</div>
                 <h2>
-                  Твоя библиотека практики <span>{bank.length}</span>
+                  Тексты для практики <span>{bank.length}</span>
                 </h2>
               </div>
               <button className="secondary" onClick={() => setImportOpen(true)}>
@@ -701,7 +741,7 @@ function App() {
               <Bookmark size={22} />
             </span>
             <div>
-              <h3>Незнакомое слово — начало, а не препятствие.</h3>
+              <h3>Слова и фразы из твоих текстов.</h3>
               <p>
                 Нажми на слово в тексте или выдели фразу. Сохрани её вместе с
                 контекстом.
@@ -715,6 +755,44 @@ function App() {
             Авторские учебные тексты: вымышленные исследования, а не официальные
             экзамены IELTS. Короткие сессии для освоения техник.
           </div>
+        </main>
+      )}
+      <div hidden={page !== "timer"}>
+        <StudyTimer />
+      </div>
+      {page === "writing" && (
+        <main>
+          <React.Suspense
+            fallback={<p className="study-start">Открываем Writing…</p>}
+          >
+            <WritingStudio />
+          </React.Suspense>
+        </main>
+      )}
+      {page === "resources" && (
+        <main>
+          <React.Suspense fallback={<p>Открываем банк…</p>}>
+            <ResourceLibrary
+              onSaveWord={(entry) => {
+                setWords((prev) =>
+                  prev.some(
+                    (w) => w.text.toLowerCase() === entry.text.toLowerCase(),
+                  )
+                    ? prev
+                    : [
+                        ...prev,
+                        {
+                          ...entry,
+                          id: crypto.randomUUID(),
+                          due: Date.now(),
+                          interval: 0,
+                        },
+                      ],
+                );
+                notify("Слово сохранено в личный словарь");
+              }}
+            />
+          </React.Suspense>
         </main>
       )}
       {page === "reader" && (
@@ -823,8 +901,100 @@ function App() {
                 <span>
                   <BookOpen size={15} /> Текст
                 </span>
-                <small>Слово → словарь · фраза → маркер</small>
+                <small>Слово → словарь · фраза → проверка смысла</small>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    setWord({ text: "", context: active.title });
+                    setTranslation("");
+                  }}
+                >
+                  Добавить слово
+                </button>
               </div>
+              <div className="sentence-picker">
+                <button
+                  className="secondary"
+                  aria-pressed={sentencePicking}
+                  onClick={() => setSentencePicking(!sentencePicking)}
+                >
+                  {sentencePicking
+                    ? "Выбор предложения включён"
+                    : "Выбрать предложение"}
+                </button>
+                <small>
+                  {sentencePicking
+                    ? "Нажми на слово — выберется всё предложение. Затем проверь, достаточно ли этого для ответа."
+                    : "Можно выделять мышью или выбрать предложение одним нажатием."}
+                </small>
+              </div>
+              <div className="reading-legend">
+                <span>
+                  <i className="legend-picked" /> Твой фрагмент
+                </span>
+                <span>
+                  <i className="legend-proof" /> Ключ после проверки
+                </span>
+                <span>
+                  <i className="legend-marker" /> Твои заметки
+                </span>
+              </div>
+              {selectedEvidence && (
+                <div className="selection-tools" role="status">
+                  <strong>Фрагмент для вопроса {idx + 1}</strong>
+                  <q>{selectedEvidence}</q>
+                  <div>
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        questionPanelRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        })
+                      }
+                    >
+                      Проверить связь с вопросом <ArrowRight size={14} />
+                    </button>
+                    <button
+                      className="text-button"
+                      disabled={selectedEvidence.length > 120}
+                      onClick={() =>
+                        pickWord(
+                          selectedEvidence,
+                          active.paragraphs.find((p) =>
+                            p.includes(selectedEvidence),
+                          ) || active.title,
+                        )
+                      }
+                    >
+                      В словарь
+                    </button>
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        setHighlights((h) => ({
+                          ...h,
+                          [`${activeId}:${mode}`]: [
+                            ...new Set([
+                              ...(h[`${activeId}:${mode}`] || []),
+                              selectedLocation || selectedEvidence,
+                            ]),
+                          ],
+                        }));
+                        notify("Фрагмент сохранён как заметка");
+                      }}
+                    >
+                      Сохранить выделение
+                    </button>
+                    <button
+                      className="text-button"
+                      onClick={() => setSelectedEvidence("")}
+                    >
+                      Снять
+                    </button>
+                  </div>
+                </div>
+              )}
               {active.paragraphs.map((p, pi) => (
                 <div
                   className={`paragraph ${q && (checked[idx] || finished || (hints[idx] || 0) >= 2) && q.paragraph === pi ? "located" : ""}`}
@@ -832,7 +1002,7 @@ function App() {
                   ref={(el) => (paragraphRefs.current[pi] = el)}
                 >
                   <span className="paragraph-letter">{letters[pi]}</span>
-                  <p>{renderParagraph(p, pi)}</p>
+                  <p data-paragraph={pi}>{renderParagraph(p, pi)}</p>
                 </div>
               ))}
             </article>
@@ -861,17 +1031,19 @@ function App() {
                     <span className="type-label">{labels[q.type]}</span>
                     <h2>
                       {mode === "coach"
-                        ? q.prompt.split(/(\s+)/).map((w, i) => (
+                        ? q.prompt.split(/(\s+)/).map((w, i, tokens) => (
                             <span
                               key={i}
                               className={
-                                (q.anchors || []).some(
-                                  (a) =>
-                                    a
-                                      .toLowerCase()
-                                      .includes(
-                                        w.toLowerCase().replace(/[^a-z]/g, ""),
-                                      ) && w.trim().length > 2,
+                                anchorRanges(q.prompt, q.anchors).some(
+                                  ([start, end]) => {
+                                    const offset = tokens
+                                      .slice(0, i)
+                                      .join("").length;
+                                    return (
+                                      offset < end && offset + w.length > start
+                                    );
+                                  },
                                 )
                                   ? "anchor"
                                   : ""
@@ -882,6 +1054,18 @@ function App() {
                           ))
                         : q.prompt}
                     </h2>
+                    {mode === "coach" && !checked[idx] && !finished && (
+                      <ReadingCoach
+                        question={q}
+                        passage={active}
+                        selectedEvidence={selectedEvidence}
+                        onClearSelection={() => setSelectedEvidence("")}
+                        onReveal={() => {
+                          setHints((h) => ({ ...h, [idx]: 3 }));
+                          evidence();
+                        }}
+                      />
+                    )}
                     {q.type === "completion" ? (
                       <>
                         <label className="input-label" htmlFor="answer">
@@ -947,7 +1131,9 @@ function App() {
                       >
                         <strong>
                           {isCorrect(q, answers[idx])
-                            ? "Верно. Вот доказательство."
+                            ? q.answer === "NOT GIVEN"
+                              ? "Верно: данных недостаточно."
+                              : "Верно. Вот доказательство."
                             : "Давай разберёмся."}
                         </strong>
                         <p className="correct-answer">
@@ -957,6 +1143,12 @@ function App() {
                           )}
                         </p>
                         <button className="quote" onClick={evidence}>
+                          {q.answer === "NOT GIVEN" && (
+                            <small>
+                              Релевантный фрагмент, а не доказательство
+                              отсутствующего факта:{" "}
+                            </small>
+                          )}
                           «{q.evidence}» <ArrowUpRight size={13} />
                         </button>
                         <p>{q.explanation}</p>
@@ -1168,17 +1360,14 @@ function App() {
       {page === "vocab" && (
         <main>
           <section className="page-heading">
-            <div className="eyebrow">СЛОВА, КОТОРЫЕ УЖЕ НЕ ПУГАЮТ</div>
-            <h1>
-              Твой маленький
-              <br />
-              <em>большой словарь.</em>
-            </h1>
+            <div className="eyebrow">СЛОВА · КОНТЕКСТ · ПЕРЕФРАЗ</div>
+            <h1>Словарь и повторение.</h1>
             <p>
               Сохраняй не только перевод, но и предложение. В контексте слово
               запоминается лучше.
             </p>
           </section>
+          <VocabularyCloud cloud={cloud} />
           <div className="section-top">
             <div className="chips">
               <span>{words.length} слов</span>
@@ -1600,13 +1789,56 @@ function App() {
           </div>
         </main>
       )}
+      {mobileMore && (
+        <div className="mobile-more" aria-label="Другие разделы">
+          {[
+            ["learn", "Техники"],
+            ["progress", "Мой путь"],
+            ["resources", "Банк и советы"],
+            ["timer", "Таймер"],
+          ].map(([id, label]) => (
+            <button key={id} onClick={() => navigate(id)}>
+              {label}
+            </button>
+          ))}
+          <p>
+            На iPhone: «Поделиться» → «На экран Домой». На Android: меню
+            браузера → «Установить приложение».
+          </p>
+        </div>
+      )}
+      <nav className="mobile-dock" aria-label="Мобильная навигация">
+        {[
+          ["home", "Reading", BookOpen],
+          ["writing", "Writing", FileText],
+          ["vocab", "Словарь", Bookmark],
+          ["timer", "Таймер", Clock],
+        ].map(([id, label, Icon]) => (
+          <button
+            key={id}
+            className={
+              page === id || (id === "home" && page === "reader")
+                ? "active"
+                : ""
+            }
+            onClick={() => navigate(id)}
+          >
+            <Icon size={19} />
+            <span>{label}</span>
+          </button>
+        ))}
+        <button
+          aria-expanded={mobileMore}
+          onClick={() => setMobileMore(!mobileMore)}
+        >
+          <Menu size={19} />
+          <span>Ещё</span>
+        </button>
+      </nav>
       <footer>
+        <span>IELTS Preparation · Reading & Writing</span>
         <span>
-          Reading Atelier <span className="footer-flower">✳</span> Учимся
-          замечать смысл.
-        </span>
-        <span>
-          Авторская практика · IELTS Academic · С любовью к маленьким шагам
+          Авторские упражнения · официальные критерии · сохранение в браузере
         </span>
       </footer>
       {word && (
@@ -1663,14 +1895,30 @@ function App() {
             </p>
             <button
               className="secondary"
-              disabled={!word.text.trim() || page !== "reader"}
+              disabled={
+                !word.text.trim() ||
+                page !== "reader" ||
+                !active.paragraphs.some((p) => p.includes(word.text))
+              }
               onClick={() => {
                 setHighlights((h) => ({
                   ...h,
                   [`${activeId}:${mode}`]: [
                     ...new Set([
                       ...(h[`${activeId}:${mode}`] || []),
-                      word.text,
+                      {
+                        text: word.text,
+                        paragraph: active.paragraphs.findIndex((p) =>
+                          p.includes(word.text),
+                        ),
+                        start: active.paragraphs
+                          .find((p) => p.includes(word.text))
+                          .indexOf(word.text),
+                        end:
+                          active.paragraphs
+                            .find((p) => p.includes(word.text))
+                            .indexOf(word.text) + word.text.length,
+                      },
                     ]),
                   ],
                 }));
@@ -1846,3 +2094,6 @@ function App() {
   );
 }
 createRoot(document.getElementById("root")).render(<App />);
+
+if ("serviceWorker" in navigator && import.meta.env.PROD)
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
